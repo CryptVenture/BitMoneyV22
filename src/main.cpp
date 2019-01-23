@@ -1853,16 +1853,16 @@ int64_t GetBlockValue(int nHeight)
 			nSubsidy = 1251 * COIN;
 		}
 		else if (nHeight <= 300000 && nHeight > 150000) {
-			nSubsidy = 425 * COIN;
+			nSubsidy = 325 * COIN;
 		}
 		else if (nHeight <= 1000000 && nHeight > 300000) {
-			nSubsidy = 475 * COIN;
+			nSubsidy = 425 * COIN;
 		}
 		else if (nHeight <= 3000000 && nHeight > 1000000) {
-			nSubsidy = 600 * COIN;
+			nSubsidy = 525 * COIN;
 		}
 		else {
-			nSubsidy = 525 * COIN;
+			nSubsidy = 475 * COIN;
 		}
 	}
 	else if (nHeight >= DynBlockStart && nHeight <= DynBlockEnd)
