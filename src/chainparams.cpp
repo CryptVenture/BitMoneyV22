@@ -149,8 +149,8 @@ public:
         nBlockEnforceInvalidUTXO = ~1; //Start enforcing the invalid UTXO's
         nInvalidAmountFiltered = 0 * COIN; //Amount of invalid coins filtered through exchanges, that should be considered valid
         nBlockZerocoinV2 = 999999999; //!> The block that zerocoin v2 becomes active - DONT ACTIVATE NOW
-        nEnforceNewSporkKey = 1545609600; //!> Sporks signed after (GMT): 12/24/2018 @ 12:00am (UTC) must use the new spork key
-        nRejectOldSporkKey = 1545732000; //!> Fully reject old spork key after release - 12/25/2018 @ 10:00am (UTC)
+        nEnforceNewSporkKey = 1548237600; //!> Sporks signed after (GMT): 01/23/2019 @ 10:00am (UTC) must use the new spork key
+        nRejectOldSporkKey = 1548331200; //!> Fully reject old spork key after release - 01/24/2019 @ 12:00pm (UTC)
 
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
