@@ -266,11 +266,11 @@ UniValue stop(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop PIVX server.");
+            "\nStop BitMoney server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "PIVX server stopping";
+    return "BitMoney server stopping";
 }
 
 
@@ -354,37 +354,37 @@ static const CRPCCommand vRPCCommands[] =
         {"hidden", "reconsiderblock", &reconsiderblock, true, true, false},
         {"hidden", "setmocktime", &setmocktime, true, false, false},
 
-        /* PIVX features */
-        {"pivx", "masternode", &masternode, true, true, false},
-        {"pivx", "listmasternodes", &listmasternodes, true, true, false},
-        {"pivx", "getmasternodecount", &getmasternodecount, true, true, false},
-        {"pivx", "masternodeconnect", &masternodeconnect, true, true, false},
-        {"pivx", "createmasternodebroadcast", &createmasternodebroadcast, true, true, false},
-        {"pivx", "decodemasternodebroadcast", &decodemasternodebroadcast, true, true, false},
-        {"pivx", "relaymasternodebroadcast", &relaymasternodebroadcast, true, true, false},
-        {"pivx", "masternodecurrent", &masternodecurrent, true, true, false},
-        {"pivx", "masternodedebug", &masternodedebug, true, true, false},
-        {"pivx", "startmasternode", &startmasternode, true, true, false},
-        {"pivx", "createmasternodekey", &createmasternodekey, true, true, false},
-        {"pivx", "getmasternodeoutputs", &getmasternodeoutputs, true, true, false},
-        {"pivx", "listmasternodeconf", &listmasternodeconf, true, true, false},
-        {"pivx", "getmasternodestatus", &getmasternodestatus, true, true, false},
-        {"pivx", "getmasternodewinners", &getmasternodewinners, true, true, false},
-        {"pivx", "getmasternodescores", &getmasternodescores, true, true, false},
-        {"pivx", "mnbudget", &mnbudget, true, true, false},
-        {"pivx", "preparebudget", &preparebudget, true, true, false},
-        {"pivx", "submitbudget", &submitbudget, true, true, false},
-        {"pivx", "mnbudgetvote", &mnbudgetvote, true, true, false},
-        {"pivx", "getbudgetvotes", &getbudgetvotes, true, true, false},
-        {"pivx", "getnextsuperblock", &getnextsuperblock, true, true, false},
-        {"pivx", "getbudgetprojection", &getbudgetprojection, true, true, false},
-        {"pivx", "getbudgetinfo", &getbudgetinfo, true, true, false},
-        {"pivx", "mnbudgetrawvote", &mnbudgetrawvote, true, true, false},
-        {"pivx", "mnfinalbudget", &mnfinalbudget, true, true, false},
-        {"pivx", "checkbudgets", &checkbudgets, true, true, false},
-        {"pivx", "mnsync", &mnsync, true, true, false},
-        {"pivx", "spork", &spork, true, true, false},
-        {"pivx", "getpoolinfo", &getpoolinfo, true, true, false},
+        /* BitMoney features */
+        {"BitMoney", "masternode", &masternode, true, true, false},
+        {"BitMoney", "listmasternodes", &listmasternodes, true, true, false},
+        {"BitMoney", "getmasternodecount", &getmasternodecount, true, true, false},
+        {"BitMoney", "masternodeconnect", &masternodeconnect, true, true, false},
+        {"BitMoney", "createmasternodebroadcast", &createmasternodebroadcast, true, true, false},
+        {"BitMoney", "decodemasternodebroadcast", &decodemasternodebroadcast, true, true, false},
+        {"BitMoney", "relaymasternodebroadcast", &relaymasternodebroadcast, true, true, false},
+        {"BitMoney", "masternodecurrent", &masternodecurrent, true, true, false},
+        {"BitMoney", "masternodedebug", &masternodedebug, true, true, false},
+        {"BitMoney", "startmasternode", &startmasternode, true, true, false},
+        {"BitMoney", "createmasternodekey", &createmasternodekey, true, true, false},
+        {"BitMoney", "getmasternodeoutputs", &getmasternodeoutputs, true, true, false},
+        {"BitMoney", "listmasternodeconf", &listmasternodeconf, true, true, false},
+        {"BitMoney", "getmasternodestatus", &getmasternodestatus, true, true, false},
+        {"BitMoney", "getmasternodewinners", &getmasternodewinners, true, true, false},
+        {"BitMoney", "getmasternodescores", &getmasternodescores, true, true, false},
+        {"BitMoney", "mnbudget", &mnbudget, true, true, false},
+        {"BitMoney", "preparebudget", &preparebudget, true, true, false},
+        {"BitMoney", "submitbudget", &submitbudget, true, true, false},
+        {"BitMoney", "mnbudgetvote", &mnbudgetvote, true, true, false},
+        {"BitMoney", "getbudgetvotes", &getbudgetvotes, true, true, false},
+        {"BitMoney", "getnextsuperblock", &getnextsuperblock, true, true, false},
+        {"BitMoney", "getbudgetprojection", &getbudgetprojection, true, true, false},
+        {"BitMoney", "getbudgetinfo", &getbudgetinfo, true, true, false},
+        {"BitMoney", "mnbudgetrawvote", &mnbudgetrawvote, true, true, false},
+        {"BitMoney", "mnfinalbudget", &mnfinalbudget, true, true, false},
+        {"BitMoney", "checkbudgets", &checkbudgets, true, true, false},
+        {"BitMoney", "mnsync", &mnsync, true, true, false},
+        {"BitMoney", "spork", &spork, true, true, false},
+        {"BitMoney", "getpoolinfo", &getpoolinfo, true, true, false},
 
 #ifdef ENABLE_WALLET
         /* Wallet */
@@ -450,11 +450,11 @@ static const CRPCCommand vRPCCommands[] =
         {"zerocoin", "exportzerocoins", &exportzerocoins, false, false, true},
         {"zerocoin", "reconsiderzerocoins", &reconsiderzerocoins, false, false, true},
         {"zerocoin", "getspentzerocoinamount", &getspentzerocoinamount, false, false, false},
-        {"zerocoin", "getzpivseed", &getzpivseed, false, false, true},
-        {"zerocoin", "setzpivseed", &setzpivseed, false, false, true},
+        {"zerocoin", "getzbitseed", &getzbitseed, false, false, true},
+        {"zerocoin", "setzbitseed", &setzbitseed, false, false, true},
         {"zerocoin", "generatemintlist", &generatemintlist, false, false, true},
-        {"zerocoin", "searchdzpiv", &searchdzpiv, false, false, true},
-        {"zerocoin", "dzpivstate", &dzpivstate, false, false, true}
+        {"zerocoin", "searchdzbit", &searchdzbit, false, false, true},
+        {"zerocoin", "dzbitstate", &dzbitstate, false, false, true}
 
 #endif // ENABLE_WALLET
 };
@@ -618,14 +618,14 @@ std::vector<std::string> CRPCTable::listCommands() const
 
 std::string HelpExampleCli(string methodname, string args)
 {
-    return "> pivx-cli " + methodname + " " + args + "\n";
+    return "> BitMoney-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(string methodname, string args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
            "\"method\": \"" +
-           methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:51473/\n";
+           methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:48444/\n";
 }
 
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)

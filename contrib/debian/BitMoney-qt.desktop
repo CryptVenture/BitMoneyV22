@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=BitMoney
+Comment=BitMoney P2P Cryptocurrency
+Comment[fr]=BitMoney, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=BitMoney, eşten eşe kriptografik sanal para birimi
+Exec=BitMoney-qt %u
+Terminal=false
+Type=Application
+Icon=BitMoney128
+MimeType=x-scheme-handler/BitMoney;
+Categories=Office;Finance;

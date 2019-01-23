@@ -10,8 +10,8 @@
 #include <vector>
 
 /**
- * CBaseChainParams defines the base parameters (shared between pivx-cli and pivxd)
- * of a given instance of the Pivx system.
+ * CBaseChainParams defines the base parameters (shared between BitMoney-cli and BitMoneyd)
+ * of a given instance of the BitMoney system.
  */
 class CBaseChainParams
 {

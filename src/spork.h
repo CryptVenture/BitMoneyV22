@@ -1,5 +1,6 @@
 // Copyright (c) 2014-2016 The Dash developers
 // Copyright (c) 2016-2018 The PIVX developers
+// Copyright (c) 2018-2018 The BitMoney developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +16,7 @@
 
 #include "obfuscation.h"
 #include "protocol.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace boost;
@@ -26,7 +28,7 @@ using namespace boost;
     Sporks 11,12, and 16 to be removed with 1st zerocoin release
 */
 #define SPORK_START 10001
-#define SPORK_END 10015
+#define SPORK_END 10021
 
 #define SPORK_2_SWIFTTX 10001
 #define SPORK_3_SWIFTTX_BLOCK_FILTERING 10002
@@ -41,12 +43,18 @@ using namespace boost;
 #define SPORK_14_NEW_PROTOCOL_ENFORCEMENT 10013
 #define SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2 10014
 #define SPORK_16_ZEROCOIN_MAINTENANCE_MODE 10015
+#define SPORK_17_MAX_BLOCK_COINSIZE 10016
+#define SPORK_18_MIN_BLOCK_COINSIZE 10017
+#define SPORK_19_CURRENT_BLOCK_1_COINSIZE 10018
+#define SPORK_20_CURRENT_BLOCK_2_COINSIZE 10019
+#define SPORK_21_CURRENT_DYNBLOCK_START 10020
+#define SPORK_22_CURRENT_DYNBLOCK_END 10021
 
 #define SPORK_2_SWIFTTX_DEFAULT 978307200                         //2001-1-1
 #define SPORK_3_SWIFTTX_BLOCK_FILTERING_DEFAULT 1424217600        //2015-2-18
-#define SPORK_5_MAX_VALUE_DEFAULT 1000                            //1000 PIV
+#define SPORK_5_MAX_VALUE_DEFAULT 1000                            //1000 BIT
 #define SPORK_7_MASTERNODE_SCANNING_DEFAULT 978307200             //2001-1-1
-#define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT 4070908800 //OFF
+#define SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT_DEFAULT 1540080000 //21 oct
 #define SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT_DEFAULT 4070908800  //OFF
 #define SPORK_10_MASTERNODE_PAY_UPDATED_NODES_DEFAULT 4070908800  //OFF
 //#define SPORK_11_LOCK_INVALID_UTXO_DEFAULT 4070908800             //OFF - NOTE: this is block height not time!
@@ -54,6 +62,12 @@ using namespace boost;
 #define SPORK_14_NEW_PROTOCOL_ENFORCEMENT_DEFAULT 4070908800      //OFF
 #define SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2_DEFAULT 4070908800    //OFF
 #define SPORK_16_ZEROCOIN_MAINTENANCE_MODE_DEFAULT 4070908800     //OFF
+#define SPORK_17_MAX_BLOCK_COINSIZE_DEFAULT 1500    //1500 BIT
+#define SPORK_18_MIN_BLOCK_COINSIZE_DEFAULT 10     //10 BIT
+#define SPORK_19_CURRENT_BLOCK_1_COINSIZE_DEFAULT 4070908800     //OFF -- SHOULD BE EQUAL TO 2
+#define SPORK_20_CURRENT_BLOCK_2_COINSIZE_DEFAULT 4070908800     //OFF
+#define SPORK_21_CURRENT_DYNBLOCK_START_DEFAULT 4070908800
+#define SPORK_22_CURRENT_DYNBLOCK_END_DEFAULT 4070908800
 
 class CSporkMessage;
 class CSporkManager;
@@ -83,7 +97,7 @@ public:
 
     uint256 GetHash()
     {
-        uint256 n = HashQuark(BEGIN(nSporkID), END(nTimeSigned));
+        uint256 n = XEVAN(BEGIN(nSporkID), END(nTimeSigned));
         return n;
     }
 

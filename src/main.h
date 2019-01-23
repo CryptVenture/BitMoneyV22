@@ -9,7 +9,7 @@
 #define BITCOIN_MAIN_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/pivx-config.h"
+#include "config/BitMoney-config.h"
 #endif
 
 #include "amount.h"
@@ -56,6 +56,48 @@ class CValidationState;
 struct CBlockTemplate;
 struct CNodeStateStats;
 
+inline int64_t GetMstrNodCollateral(int nHeight) {
+
+
+	if (nHeight < 15000)
+	{
+		return 2100;
+	}
+	else if (nHeight >= 15000 && nHeight < 40000)
+	{
+		return 5200;
+	}
+	else if (nHeight >= 40000 && nHeight < 60000)
+	{
+		return 9600;
+	}
+	else if (nHeight >= 60000 && nHeight < 100000)
+	{
+		return 16800;
+	}
+	else if (nHeight >= 100000 && nHeight < 150000)
+	{
+		return 36600;
+	}
+	else if (nHeight >= 150000 && nHeight < 300000)
+	{
+		return 125000;
+	}
+	else if (nHeight >= 300000 && nHeight < 1000000)
+	{
+		return 175000;
+	}
+	else if (nHeight >= 1000000 && nHeight < 3000000)
+	{
+		return 200000;
+	}
+	else
+	{
+		return 250000;
+	}
+
+}
+
 /** Default for -blockmaxsize and -blockminsize, which control the range of sizes the mining code will create **/
 static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 750000;
 static const unsigned int DEFAULT_BLOCK_MIN_SIZE = 0;
@@ -83,7 +125,7 @@ static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
-static const int COINBASE_MATURITY = 100;
+static const int COINBASE_MATURITY = 59;
 /** Maximum number of script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 16;
 /** -par default (number of script-checking threads, 0 = auto) */
@@ -220,7 +262,7 @@ bool GetTransaction(const uint256& hash, CTransaction& tx, uint256& hashBlock, b
 
 // ***TODO***
 double ConvertBitsToDouble(unsigned int nBits);
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZPIVStake);
+int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool iszbitStake);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake);
 
 bool ActivateBestChain(CValidationState& state, CBlock* pblock = NULL, bool fAlreadyChecked = false);
@@ -341,8 +383,8 @@ bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransaction& tx)
 bool IsTransactionInChain(const uint256& txId, int& nHeightTx);
 bool IsBlockHashInChain(const uint256& hashBlock);
 bool ValidOutPoint(const COutPoint out, int nHeight);
-void RecalculateZPIVSpent();
-void RecalculateZPIVMinted();
+void RecalculatezbitSpent();
+void RecalculatezbitMinted();
 bool RecalculatePIVSupply(int nHeightStart);
 bool ReindexAccumulators(list<uint256>& listMissingCheckpoints, string& strError);
 

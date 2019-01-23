@@ -1,0 +1,26 @@
+[Unit]
+Description=BitMoney's distributed currency daemon
+After=network.target
+
+[Service]
+User=BitMoney
+Group=BitMoney
+
+Type=forking
+PIDFile=/var/lib/BitMoneyd/BitMoneyd.pid
+
+ExecStart=/usr/bin/BitMoneyd -daemon -pid=/var/lib/BitMoneyd/BitMoneyd.pid \
+          -conf=/etc/BitMoney/BitMoney.conf -datadir=/var/lib/BitMoneyd
+
+ExecStop=-/usr/bin/BitMoney-cli -conf=/etc/BitMoney/BitMoney.conf \
+         -datadir=/var/lib/BitMoneyd stop
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

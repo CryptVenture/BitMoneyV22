@@ -1,0 +1,26 @@
+# /etc/conf.d/BitMoneyd: config file for /etc/init.d/BitMoneyd
+
+# Config file location
+#BITCOIND_CONFIGFILE="/etc/BitMoney/BitMoney.conf"
+
+# What directory to write pidfile to?  (created and owned by $BITCOIND_USER)
+#BITCOIND_PIDDIR="/var/run/BitMoneyd"
+
+# What filename to give the pidfile
+#BITCOIND_PIDFILE="${BITCOIND_PIDDIR}/BitMoneyd.pid"
+
+# Where to write BitMoneyd data (be mindful that the blockchain is large)
+#BITCOIND_DATADIR="/var/lib/BitMoneyd"
+
+# User and group to own BitMoneyd process
+#BITCOIND_USER="BitMoney"
+#BITCOIND_GROUP="BitMoney"
+
+# Path to BitMoneyd executable
+#BITCOIND_BIN="/usr/bin/BitMoneyd"
+
+# Nice value to run BitMoneyd under
+#BITCOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+BITCOIND_OPTS=""

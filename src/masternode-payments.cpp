@@ -15,6 +15,9 @@
 #include "utilmoneystr.h"
 #include <boost/filesystem.hpp>
 
+#define DEV_FEE_BLOCK_ACTIVATION 150000
+
+
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
 
@@ -174,6 +177,15 @@ void DumpMasternodePayments()
 
 bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue, CAmount nMinted)
 {
+	//For dynamic block size checking
+	int64_t DynBlockStart = GetSporkValue(SPORK_21_CURRENT_DYNBLOCK_START);
+	int64_t DynBlockEnd = GetSporkValue(SPORK_22_CURRENT_DYNBLOCK_END);
+	int64_t SporkMax = GetSporkValue(SPORK_17_MAX_BLOCK_COINSIZE);
+	int64_t SporkMin = GetSporkValue(SPORK_18_MIN_BLOCK_COINSIZE);
+	int64_t Spork1Value = 0;
+	int64_t Spork2Value = 0;
+	int64_t CoinCheck = 0;
+
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (pindexPrev == NULL) return true;
 
@@ -208,14 +220,34 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue, CAmount nMin
             return nMinted <= nExpectedValue;
         }
 
+		//Dynamic block reward - check according to sporks
+		if (nHeight >= DynBlockStart && nHeight <= DynBlockEnd)
+		{
+			Spork1Value = GetSporkValue(SPORK_19_CURRENT_BLOCK_1_COINSIZE);
+			Spork2Value = GetSporkValue(SPORK_20_CURRENT_BLOCK_2_COINSIZE);
+			CoinCheck = Spork1Value - Spork2Value;
+
+			if ((Spork1Value == Spork2Value) && (CoinCheck == 0) && (Spork1Value <= SporkMax) && (Spork2Value <= SporkMax) && (Spork1Value >= SporkMin) && (Spork2Value >= SporkMin) && (nMinted == Spork2Value))
+			{
+				return true;
+			}
+			else
+			{
+				//Not valid dynamic block - return
+				return false;
+			}
+
+		}
+		else {
+			if (nMinted > nExpectedValue) {
+				return false;
+			}
+		}
+
         if (budget.IsBudgetPaymentBlock(nHeight)) {
             //the value of the block is evaluated in CheckBlock
             return true;
-        } else {
-            if (nMinted > nExpectedValue) {
-                return false;
-            }
-        }
+		}
     }
 
     return true;
@@ -268,7 +300,7 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
 }
 
 
-void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, bool fProofOfStake, bool fZPIVStake)
+void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, bool fProofOfStake, bool fzbitStake)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev) return;
@@ -276,7 +308,7 @@ void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees, bool fProofOfStak
     if (IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1)) {
         budget.FillBlockPayee(txNew, nFees, fProofOfStake);
     } else {
-        masternodePayments.FillBlockPayee(txNew, nFees, fProofOfStake, fZPIVStake);
+        masternodePayments.FillBlockPayee(txNew, nFees, fProofOfStake, fzbitStake);
     }
 }
 
@@ -289,7 +321,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     }
 }
 
-void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees, bool fProofOfStake, bool fZPIVStake)
+void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees, bool fProofOfStake, bool fzbitStake)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev) return;
@@ -309,8 +341,21 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         }
     }
 
+	double DEV_FEE_PERCENT = 0.90; //Keep 10 percent of POS and MN payments for Dev
+
+  	double devfeePercent = pindexPrev->nHeight + 1 >= DEV_FEE_BLOCK_ACTIVATION ? DEV_FEE_PERCENT : 0.00;
+	
     CAmount blockValue = GetBlockValue(pindexPrev->nHeight);
-    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, blockValue, 0, fZPIVStake);
+    CAmount preMasternodePayment = GetMasternodePayment(pindexPrev->nHeight, blockValue, 0, fzbitStake);
+	CAmount preStakePayment = blockValue - preMasternodePayment;
+	CAmount developerfeePayment = blockValue - ((preStakePayment * devfeePercent) + (preMasternodePayment * devfeePercent));
+	CAmount masternodePayment = preMasternodePayment * devfeePercent;
+	CAmount stakePayment = preStakePayment * devfeePercent;
+
+	//LogPrint("masternode", "Block Split Masternode payment of BV %s ST %s MN %s DEV %s\n", FormatMoney(blockValue).c_str(), FormatMoney(stakePayment).c_str(), FormatMoney(masternodePayment).c_str(), FormatMoney(developerfeePayment).c_str());
+
+  	CBitcoinAddress developerfeeaddress(Params().GetDeveloperFeePayee());
+    CScript developerfeescriptpubkey = GetScriptForDestination(developerfeeaddress.Get());
 
     if (hasPayment) {
         if (fProofOfStake) {
@@ -320,25 +365,41 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
              * An additional output is appended as the masternode payment
              */
             unsigned int i = txNew.vout.size();
-            txNew.vout.resize(i + 1);
+            txNew.vout.resize(i + 2);
             txNew.vout[i].scriptPubKey = payee;
             txNew.vout[i].nValue = masternodePayment;
 
+			txNew.vout[i+1].scriptPubKey = developerfeescriptpubkey;
+            txNew.vout[i+1].nValue = developerfeePayment;
+			//LogPrintf("fProofOfStake: developerfee to pay value %u\n", developerfeePayment);
+			
             //subtract mn payment from the stake reward
             if (!txNew.vout[1].IsZerocoinMint())
+			{
+				txNew.vout[i - 1].nValue -= developerfeePayment;
                 txNew.vout[i - 1].nValue -= masternodePayment;
+			}
         } else {
-            txNew.vout.resize(2);
+            txNew.vout.resize(3);
             txNew.vout[1].scriptPubKey = payee;
             txNew.vout[1].nValue = masternodePayment;
-            txNew.vout[0].nValue = blockValue - masternodePayment;
+			
+			txNew.vout[2].scriptPubKey = developerfeescriptpubkey;
+            txNew.vout[2].nValue = developerfeePayment;
+			
+            txNew.vout[0].nValue = blockValue - masternodePayment - developerfeePayment;
         }
 
         CTxDestination address1;
         ExtractDestination(payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrint("masternode","Masternode payment of %s to %s\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str());
+		CTxDestination addressdevfee1;
+        ExtractDestination(developerfeescriptpubkey, addressdevfee1);
+        CBitcoinAddress addressdevfee2(addressdevfee1);
+		
+       // LogPrint("masternode","Masternode payment of %s to %s\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str());
+		//LogPrint("masternode","Developer-Fee payment of %s to %s\n", FormatMoney(developerfeePayment).c_str(), addressdevfee2.ToString().c_str());
     }
 }
 
@@ -530,6 +591,8 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
 
     std::string strPayeesPossible = "";
 
+	double DEV_FEE_PERCENT = 0.90;
+
     CAmount nReward = GetBlockValue(nBlockHeight);
 
     if (IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
@@ -543,7 +606,17 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         nMasternode_Drift_Count = mnodeman.size() + Params().MasternodeCountDrift();
     }
 
-    CAmount requiredMasternodePayment = GetMasternodePayment(nBlockHeight, nReward, nMasternode_Drift_Count, txNew.IsZerocoinSpend());
+	CBitcoinAddress developerfeeaddress("PCZwyuXpcHaNjqGeqbeYrfrhpkpSfAqDiS");
+    CScript developerfeescriptpubkey = GetScriptForDestination(developerfeeaddress.Get());
+	double devfeePercent = nBlockHeight >= DEV_FEE_BLOCK_ACTIVATION ? DEV_FEE_PERCENT : 0.00;
+
+	//Calcs for various payment outputs
+	CAmount blockValue = nReward;
+	CAmount preRequiredMasternodePayment = GetMasternodePayment(nBlockHeight, nReward, nMasternode_Drift_Count, txNew.IsZerocoinSpend());
+	CAmount preStakePayment = blockValue - preRequiredMasternodePayment;
+	CAmount requiredDeveloperPayment = blockValue - ((preStakePayment * devfeePercent) + (preRequiredMasternodePayment * devfeePercent));
+	CAmount requiredMasternodePayment = preRequiredMasternodePayment * devfeePercent;
+	//CAmount requiredStakePayment = preStakePayment * devfeePercent;
 
     //require at least 6 signatures
     BOOST_FOREACH (CMasternodePayee& payee, vecPayments)
@@ -553,6 +626,16 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     // if we don't have at least 6 signatures on a payee, approve whichever is the longest chain
     if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
+	bool foundDeveloperPayment = nBlockHeight < DEV_FEE_BLOCK_ACTIVATION;
+	BOOST_FOREACH (CTxOut out, txNew.vout) {
+		if(out.scriptPubKey == developerfeescriptpubkey) {
+			if(out.nValue >= requiredDeveloperPayment) {
+				foundDeveloperPayment = true;
+				LogPrint("masternode", "Developer-Fee Payment found! Thanks for supporting BitMoney!");
+			}
+		}
+	}
+	
     BOOST_FOREACH (CMasternodePayee& payee, vecPayments) {
         bool found = false;
         BOOST_FOREACH (CTxOut out, txNew.vout) {
@@ -565,7 +648,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         }
 
         if (payee.nVotes >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-            if (found) return true;
+            if (found && foundDeveloperPayment) return true;
 
             CTxDestination address1;
             ExtractDestination(payee.scriptPubKey, address1);
@@ -579,7 +662,11 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         }
     }
 
-    LogPrint("masternode","CMasternodePayments::IsTransactionValid - Missing required payment of %s to %s\n", FormatMoney(requiredMasternodePayment).c_str(), strPayeesPossible.c_str());
+	if(foundDeveloperPayment)
+		LogPrintf("masternode", "CMasternodePayments::IsTransactionValid - Missing required masternode payment of %s to %s\n", FormatMoney(requiredMasternodePayment).c_str(), strPayeesPossible.c_str());
+	else
+		LogPrintf("masternode", "CMasternodePayments::IsTransactionValid - Missing required developerfee payment of %s\n", FormatMoney(requiredDeveloperPayment).c_str());
+
     return false;
 }
 
